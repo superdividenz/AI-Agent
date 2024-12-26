@@ -1,31 +1,49 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const puppeteer = require('puppeteer');
 
-const app = express();
-const PORT = 5001;
+// Endpoint to scrape player stats
+app.get('/scrape-player-stats', async (req, res) => {
+    const { playerUrl } = req.query;
+    if (!playerUrl) {
+        return res.status(400).json({ error: 'Player URL is required' });
+    }
 
-app.use(cors());
-app.use(express.json());
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-app.post('/chat', async (req, res) => {
-    const { message } = req.body;
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-        const result = await model.generateContent(message);
-        const response = await result.response;
-        const text = response.text();
-        res.json({ reply: text });
+        // Launch a headless browser
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        // Navigate to the player's page
+        await page.goto(playerUrl, { waitUntil: 'networkidle2' });
+
+        // Extract the player's name
+        const playerName = await page.$eval('h1[itemprop="name"]', (el) => el.textContent.trim());
+
+        // Extract the stats table (e.g., batting stats)
+        const statsTable = await page.$('#batting_standard');
+        if (!statsTable) {
+            await browser.close();
+            return res.status(404).json({ error: 'Stats table not found' });
+        }
+
+        // Extract table headers
+        const headers = await statsTable.$$eval('thead th', (ths) =>
+            ths.map((th) => th.textContent.trim())
+        );
+
+        // Extract table rows
+        const rows = await statsTable.$$eval('tbody tr', (trs) =>
+            trs.map((tr) => {
+                const cells = tr.querySelectorAll('th, td');
+                return Array.from(cells).map((cell) => cell.textContent.trim());
+            })
+        );
+
+        // Close the browser
+        await browser.close();
+
+        res.json({ playerName, headers, stats: rows });
     } catch (error) {
-        console.error('Error details:', error.message, error.response?.data);
+        console.error('Error scraping player stats:', error.message);
         res.status(500).json({ error: 'Something went wrong' });
     }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
 });
