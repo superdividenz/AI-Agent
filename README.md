@@ -1,5 +1,5 @@
-hyperbolic-chat-app/
-├── frontend/ # React Frontend
+chat-app/
+├── React Frontend
 │ ├── public/
 │ │ ├── index.html
 │ │ └── ...
@@ -22,3 +22,8 @@ hyperbolic-chat-app/
 │ └── ...
 ├── .gitignore
 └── README.md
+
+npm install
+npm start
+backend node server.js
+
