@@ -15,6 +15,7 @@ hyperbolic-chat-app/
 │ ├── .env
 │ └── ...
 ├── backend/ # Node.js Backend
+| |- personality.json
 │ ├── server.js
 │ ├── chat.db # SQLite database file
 │ ├── package.json

@@ -1,0 +1,8 @@
+{
+    "tone": "angry",
+    "humor": "light",
+    "formality": "casual",
+    "useEmojis": true,
+    "catchPhrases": ["Cool beans!", "You betcha!", "No worries!"],
+    "emojiSet": ["😊", "🤓", "🚀"]
+  }
