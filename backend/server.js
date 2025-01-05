@@ -37,7 +37,7 @@ app.post('/api/chat', async (req, res) => {
         Authorization: `Bearer ${process.env.HYPERBOLIC_API_KEY}`,
     };
     const body = JSON.stringify({
-        model: 'meta-llama/Llama-3.3-70B-Instruct',
+        model: 'deepseek-ai/DeepSeek-V3',
         messages: [
             {
                 role: 'user',
@@ -98,5 +98,5 @@ app.get('/api/chat-history', (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

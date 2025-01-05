@@ -13,7 +13,7 @@ const ChatComponent = () => {
 
         try {
             // Send the user input to the backend
-            const res = await fetch('http://localhost:5000/api/chat', {
+            const res = await fetch('http://localhost:5001/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ const ChatComponent = () => {
             <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-                    <h1 className="text-3xl font-bold text-white">Yommy</h1>
+                    <h1 className="text-3xl font-bold text-white">Yommerss</h1>
                     <p className="text-sm text-blue-200 mt-1">AI Bot</p>
                 </div>
 
