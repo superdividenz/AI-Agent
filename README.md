@@ -1,20 +1,26 @@
-chat-app/
-├── React Frontend
-│ ├── public/
-│ │ ├── index.html
-│ │ └── ...
+npm install
+npm start
+backend node server.js
+
+project-root/
+│
+├── frontend/ # Frontend directory
 │ ├── src/
 │ │ ├── components/
 │ │ │ └── ChatComponent.js
+│ │ ├── config/
+│ │ │ ├── personality.json
+│ │ │ └── messages.json
+│ │ ├── data/
+│ │ │ └── chatHistory.json
 │ │ ├── App.js
-│ │ ├── index.js
-│ │ ├── index.css
-│ │ └── ...
+│ │ └── index.js
+│ ├── public/
+│ │ └── index.html
 │ ├── package.json
-│ ├── package-lock.json
-│ ├── .env
-│ └── ...
-├── backend/ # Node.js Backend
+│ └── .gitignore
+│
+├── backend/  
 │ ├── server.js
 │ ├── chat.db # SQLite database file
 │ ├── package.json
@@ -22,8 +28,3 @@ chat-app/
 │ └── ...
 ├── .gitignore
 └── README.md
-
-npm install
-npm start
-backend node server.js
-

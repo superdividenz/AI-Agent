@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+const personality = require('../config/personality.json');
+const messages = require('../config/messages.json');
+const chatHistory = require('../data/chatHistory.json');
 
 const ChatComponent = () => {
     const [input, setInput] = useState('');
     const [response, setResponse] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [chatHistoryState, setChatHistoryState] = useState(chatHistory || []);
 
     // Handle sending a message
     const handleSend = async () => {
@@ -12,13 +16,16 @@ const ChatComponent = () => {
         setIsLoading(true);
 
         try {
-            // Send the user input to the backend
+            // Send the user input to the backend with personality included
             const res = await fetch('http://localhost:5000/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userInput: input }),
+                body: JSON.stringify({
+                    userInput: input,
+                    personality: personality // Sending personality data to the server
+                }),
             });
 
             if (!res.ok) {
@@ -27,13 +34,24 @@ const ChatComponent = () => {
 
             const data = await res.json();
             setResponse(data.aiResponse);
+
+            // Update chat history
+            setChatHistoryState(prev => [...prev, { userInput: input, aiResponse: data.aiResponse }]);
+            setInput(''); // Clear input after sending
         } catch (error) {
             console.error('Error sending message:', error);
-            setResponse("Oops! Something went wrong. Let's try that again.");
+            setResponse(messages.error || "Oops! Something went wrong. Let's try that again.");
         } finally {
             setIsLoading(false);
         }
     };
+
+    // Use messages for the initial response if there's no previous response
+    useEffect(() => {
+        if (!response && !input) {
+            setResponse(messages.welcome || "Hi there! How can I help you today?");
+        }
+    }, [input, messages, response]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col items-center justify-center p-4">
@@ -76,8 +94,18 @@ const ChatComponent = () => {
                                 <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce delay-200"></div>
                             </div>
                         ) : (
-                            <p className="text-gray-700 whitespace-pre-wrap">{response || "Hi there! How can I help you today?"}</p>
+                            <p className="text-gray-700 whitespace-pre-wrap">{response}</p>
                         )}
+                    </div>
+                    
+                    {/* Display chat history */}
+                    <div className="mt-4">
+                        {chatHistoryState.map((chat, index) => (
+                            <div key={index}>
+                                <p className="text-sm text-gray-600">User: {chat.userInput}</p>
+                                <p className="text-sm text-gray-800">AI: {chat.aiResponse}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

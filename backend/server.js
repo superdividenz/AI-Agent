@@ -14,22 +14,43 @@ const db = new sqlite3.Database(process.env.DATABASE_PATH, (err) => {
         console.error('Error connecting to SQLite database:', err);
     } else {
         console.log('Connected to SQLite database');
-        // Create a table for chat history
+
+        // Create a table for chat history if it doesn't exist
         db.run(`
             CREATE TABLE IF NOT EXISTS chats (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_input TEXT,
                 ai_response TEXT,
+                personality TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
-        `);
+        `, (err) => {
+            if (err) {
+                console.error('Error creating chats table:', err);
+            } else {
+                // Add personality column if it doesn't exist
+                db.run(`
+                    ALTER TABLE chats ADD COLUMN personality TEXT
+                `, (alterErr) => {
+                    if (alterErr) {
+                        if (alterErr.message.includes('duplicate column name: personality')) {
+                            console.log('Personality column already exists in chats table');
+                        } else {
+                            console.error('Error adding personality column:', alterErr);
+                        }
+                    } else {
+                        console.log('Added or confirmed personality column in chats table');
+                    }
+                });
+            }
+        });
     }
 });
 
 // Handle Hyperbolic API requests
 app.post('/api/chat', async (req, res) => {
-    const { userInput } = req.body;
-    console.log('Received user input:', userInput);
+    const { userInput, personality } = req.body;
+    console.log('Received user input:', userInput, 'Personality:', personality);
 
     const url = process.env.HYPERBOLIC_API_URL;
     const headers = {
@@ -39,6 +60,10 @@ app.post('/api/chat', async (req, res) => {
     const body = JSON.stringify({
         model: 'meta-llama/Llama-3.3-70B-Instruct',
         messages: [
+            {
+                role: 'system',
+                content: `You are an AI with a ${personality?.tone || 'default'} tone, with ${personality?.humor || 'default'} humor, and ${personality?.verbosity || 'default'} verbosity.`
+            },
             {
                 role: 'user',
                 content: userInput,
@@ -69,8 +94,8 @@ app.post('/api/chat', async (req, res) => {
 
         // Save chat history to SQLite
         db.run(
-            'INSERT INTO chats (user_input, ai_response) VALUES (?, ?)',
-            [userInput, aiResponse],
+            'INSERT INTO chats (user_input, ai_response, personality) VALUES (?, ?, ?)',
+            [userInput, aiResponse, JSON.stringify(personality || {})],
             (err) => {
                 if (err) {
                     console.error('Error saving chat:', err);
@@ -92,7 +117,12 @@ app.get('/api/chat-history', (req, res) => {
             console.error('Error fetching chat history:', err);
             res.status(500).json({ error: 'Failed to fetch chat history' });
         } else {
-            res.json(rows);
+            // Parse the personality JSON string back to an object
+            const historyWithParsedPersonality = rows.map(row => ({
+                ...row,
+                personality: JSON.parse(row.personality || '{}')
+            }));
+            res.json(historyWithParsedPersonality);
         }
     });
 });
